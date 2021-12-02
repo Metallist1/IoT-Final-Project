@@ -1,0 +1,28 @@
+<div class="flex-box">
+
+  <form [formGroup]="loginDetail" novalidate>
+
+    <div class="field">
+      <input type="email" name="email" class="input small-letters" placeholder="Label" formControlName="email" />
+    </div>
+
+    <ul *ngIf="f.email.errors && (f.email.dirty || f.email.touched)">
+      <li *ngIf="f.email.errors.minlength" class="error-text">  Label must be at least 1 characters</li>
+      <li *ngIf="f.email.errors.maxlength" class="error-text">  Label must be no more than 100 characters</li>
+    </ul>
+
+  </form>
+
+  <div class="margin-medium">
+    <ngb-timepicker [(ngModel)]="startTime"></ngb-timepicker>
+  </div>
+  <div class="text-center-align">
+    <div>-</div>
+  </div>
+  <div class="margin-medium">
+    <ngb-timepicker [(ngModel)]="endTime"></ngb-timepicker>
+  </div>
+  <div class="margin-medium">
+    <button type="button" class="btn btn-outline-primary" (click)="createAlarm()">Create Alarm</button>
+  </div>
+</div>

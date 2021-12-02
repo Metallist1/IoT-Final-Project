@@ -1,0 +1,25 @@
+
+<table class="table table-striped">
+  <thead>
+  <tr>
+    <th scope="col">#</th>
+    <th scope="col">Alarm Label</th>
+    <th scope="col">Start Time</th>
+    <th scope="col">End Time</th>
+    <th scope="col"></th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr *ngFor="let alarm of alarms; index as i">
+    <th scope="row">{{ alarm.id }}</th>
+    <td>
+      {{ alarm.label }}
+    </td>
+    <td>{{ alarm.startTime }}</td>
+    <td>{{ alarm.endTime }}</td>
+    <td class="text-right">
+      <button class="btn btn-sm btn-danger" (click)="removeAlarm(alarm)">Delete</button>
+    </td>
+  </tr>
+  </tbody>
+</table>
