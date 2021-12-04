@@ -1,72 +1,50 @@
-import RPi.GPIO as GPIO  # import GPIO
-from hx711 import HX711  # import the class HX711
+import pygame
+import datetime
+import time
 
-try:
-    GPIO.setmode(GPIO.BCM)  # set GPIO pin mode to BCM numbering
-    # Create an object hx which represents your real hx711 chip
-    # Required input parameters are only 'dout_pin' and 'pd_sck_pin'
-    hx = HX711(dout_pin=2, pd_sck_pin=3)
-    # measure tare and save the value as offset for current channel
-    # and gain selected. That means channel A and gain 128
-    err = hx.zero()
-    # check if successful
-    if err:
-        raise ValueError('Tare is unsuccessful.')
+class Alarm:
+    def __init__(self, startTime, endTime):
+        self.startTime = startTime
+        self.endTime = endTime
 
-    reading = hx.get_raw_data_mean()
-    if reading:  # always check if you get correct value or only False
-        # now the value is close to 0
-        print('Data subtracted by offset but still not converted to units:',
-              reading)
-    else:
-        print('invalid data', reading)
+    def get_start_time(self):
+        x = self.startTime.split(":")
+        now = datetime.datetime.now()
+        return now.replace(hour=int(x[0]), minute=int(x[1]), second=0, microsecond=0)
 
-    # In order to calculate the conversion ratio to some units, in my case I want grams,
-    # you must have known weight.
-    input('Put known weight on the scale and then press Enter')
-    reading = hx.get_data_mean()
-    if reading:
-        print('Mean value from HX711 subtracted by offset:', reading)
-        known_weight_grams = input(
-            'Write how many grams it was and press Enter: ')
-        try:
-            value = float(known_weight_grams)
-            print(value, 'grams')
-        except ValueError:
-            print('Expected integer or float and I have got:',
-                  known_weight_grams)
+    def get_end_time(self):
+        x = self.endTime.split(":")
+        now = datetime.datetime.now()
+        return now.replace(hour=int(x[0]), minute=int(x[1]), second=0, microsecond=0)
 
-        # set scale ratio for particular channel and gain which is
-        # used to calculate the conversion to units. Required argument is only
-        # scale ratio. Without arguments 'channel' and 'gain_A' it sets
-        # the ratio for current channel and gain.
-        ratio = reading / value  # calculate the ratio for channel A and gain 128
-        hx.set_scale_ratio(ratio)  # set ratio for current channel
-        print('Ratio is set.')
-    else:
-        raise ValueError('Cannot calculate mean value. Try debug mode. Variable reading:', reading)
+# empty list
+alarm_list = [Alarm('10:10', '10:15'), Alarm('13:10', '14:00')]
 
-    # Read data several times and return mean value
-    # subtracted by offset and converted by scale ratio to
-    # desired units. In my case in grams.
-    print("Now, I will read data in infinite loop. To exit press 'CTRL + C'")
-    input('Press Enter to begin reading')
-    print('Current weight on the scale in grams is: ')
+def play_speaker():
+    if not pygame.mixer.music.get_busy():
+        pygame.mixer.music.load("./Songs/myfile.wav")
+        pygame.mixer.music.play()
+
+def stop_speaker():
+    pygame.mixer.music.stop()
+
+
+def should_play_alarm():
+    for x in alarm_list:
+        if x.get_start_time() < now < x.get_end_time():
+            return True
+    return False
+
+if __name__ == '__main__':
+    starttime = time.time()
+    pygame.mixer.init()
     while True:
-        print(hx.get_weight_mean(20), 'g')
+        print("tick")
+        now = datetime.datetime.now()
+        if should_play_alarm(): #and weight is positive
+            if not pygame.mixer.music.get_busy():
+                play_speaker()
 
-except (KeyboardInterrupt, SystemExit):
-    print('Bye :)')
-
-finally:
-    GPIO.cleanup()
-#def play_speaker():
-    #  pygame.mixer.init()
-    #    pygame.mixer.music.play()
-    #  while pygame.mixer.music.get_busy() == True:
-    #    continue
-
-
-# __name__ == '__main__':
-# play_speaker()
-
+        elif pygame.mixer.music.get_busy():
+            stop_speaker()
+        time.sleep(10.0 - ((time.time() - starttime) % 10.0))
