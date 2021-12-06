@@ -33,7 +33,7 @@ exports.findById = function(req, res) {
 };
 
 exports.update = function(req, res) {
-    Alarm.update(req.sensorId, req, function(err, response) {
+    Alarm.update(req.id, req, function(err, response) {
         if (err)
         res(err , null);
         res(null, response);

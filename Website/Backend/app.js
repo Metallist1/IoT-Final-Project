@@ -65,34 +65,27 @@ client.on('message', function (topic, message) {
     //Called each time a message is received
     console.log('Received message:', topic, message.toString());
 
-    /*if(topic === 'temperature/change'){
-        temperatureController.create(JSON.parse(message), function(err, temper) {
+    if(topic === 'sensor/change'){
+        io.emit("sensor_changed", {timestamp: JSON.parse(message).timestamp, type: JSON.parse(message).type});
+    }
+
+    if(topic === 'sensor/alarms/getAll'){
+        alarmController.findAll(null, function(err, temper) {
             if (err){
                 console.log(err);
             }
             else{
-                io.emit("new_temperature", JSON.parse(message));
+                client.publish('alarms/getAll', JSON.stringify(temper));
             }
         });
     }
-
-    if(topic === 'humidity/change'){
-        humidityController.create(JSON.parse(message), function(err, humid) {
-            if (err){
-                console.log(err);
-            }
-            else{
-                io.emit("new_humidity", JSON.parse(message));
-            }
-        });
-    }*/
 });
 
 // subscribe to topic 'my/test/topic'
 
-//client.subscribe('temperature/change');
+client.subscribe('sensor/change');
 
-//client.subscribe('humidity/change');
+client.subscribe('sensor/alarms/getAll');
 
 
 //Socket IO
@@ -108,18 +101,6 @@ io.on("connection", function (socket) {
         }
     });
 
-    
-   /* settingsController.findById('1A', function(err, botSettings) {
-        if (err){
-            console.log(err);
-        }
-        else{
-            
-            client.publish('setting/change', JSON.stringify(botSettings));
-            socket.emit("new_settings", botSettings);
-        }
-    });*/
-
     socket.on('create_alarm', (alarm) => {
         alarmController.create(alarm, function(err, alarmCreated) {
             if (err){
@@ -127,6 +108,7 @@ io.on("connection", function (socket) {
             }
             else{
                 io.emit("created_alarm", {id: alarmCreated.data, label: alarm.label, startTime: alarm.startTime, endTime: alarm.endTime});
+                client.publish('alarms/created', JSON.stringify({id: alarmCreated.data, label: alarm.label, startTime: alarm.startTime, endTime: alarm.endTime}));
             }
         });
     });
@@ -146,6 +128,27 @@ io.on("connection", function (socket) {
                         io.emit("all_alarms", alarms);
                     }
                 });
+                client.publish('alarms/deleted', JSON.stringify(alarm));
+            }
+        });
+    });
+
+    socket.on('update_alarm', (alarm) => {
+        alarmController.update(alarm, function(err, alarmDeleted) {
+            if (err){
+                console.log(err);
+            }
+            else{
+
+                alarmController.findAll(null, function(err, alarms) {
+                    if (err){
+                        console.log(err);
+                    }
+                    else{
+                        io.emit("all_alarms", alarms);
+                    }
+                });
+                client.publish('alarms/updated', JSON.stringify(alarm));
             }
         });
     });
