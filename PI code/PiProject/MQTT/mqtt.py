@@ -21,9 +21,14 @@ from paho import mqtt
 from MQTT.alarm import c
 
 
-class MQTTClass:
+class MQTTSingleton:
 
     # empty list
+    _instances = {}
+    def __new__(class_, *args, **kwargs):
+        if class_ not in class_._instances:
+            class_._instances[class_] = super(MQTTSingleton, class_).__new__(class_, *args, **kwargs)
+        return class_._instances[class_]
 
     def __init__(self):
         self.get_all_alarms()
@@ -95,3 +100,8 @@ class MQTTClass:
     # loop_forever for simplicity, here you need to stop the loop manually
     # you can also use loop_start and loop_stop
     client.loop_start()
+
+class MQTTClass(MQTTSingleton):
+  pass
+
+MQTTC = MQTTClass()
